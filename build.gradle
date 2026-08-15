@@ -43,6 +43,20 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
+// Avisa sobre API depreciada e cast inseguro. Vale especialmente porque o
+// Spring Boot 4 é recente: assinatura que mudou desde o 3.x aparece aqui em
+// vez de passar silenciosa.
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// `./gradlew bootRun` é sempre desenvolvimento local, então ativa o perfil
+// `dev` (que semeia o administrador inicial). Um `java -jar` — como sobe em
+// produção — não passa por aqui e portanto não semeia nada.
+tasks.named('bootRun') {
+	systemProperty 'spring.profiles.active', 'dev'
 }

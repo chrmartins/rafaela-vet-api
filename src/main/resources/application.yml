@@ -46,3 +46,9 @@ management:
 logging:
   level:
     com.rafaelasoares: INFO
+  pattern:
+    # Imprime o id da requisição (posto no MDC pelo RequestIdFilter) em toda
+    # linha. É o que liga o erro visto na tela ao rastro no log: o mesmo id
+    # volta no header X-Request-Id e no corpo da resposta de erro.
+    # O `:-` deixa em branco quando não há requisição (startup, tarefas).
+    level: "%5p [%X{requestId:-}]"

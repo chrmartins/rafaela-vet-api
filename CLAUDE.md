@@ -121,6 +121,41 @@ GET    /api/sessoes/atual                  usuário logado + perfil
 DELETE /api/sessoes/atual                  encerrar sessão
 ```
 
+## Erros e observabilidade
+
+**Exceções são tratadas por categoria, não por classe.** Toda exceção de
+negócio estende uma das três em `common/exception/`:
+
+| Categoria | HTTP | Quando |
+|---|---|---|
+| `NotFoundException` | 404 | recurso não existe |
+| `ConflictException` | 409 | conflita com dado existente (unicidade, concorrência) |
+| `BusinessRuleException` | 422 | requisição válida, mas fere regra de domínio |
+
+Cada domínio cria as suas em `<dominio>/exception/`, com nome que descreve a
+situação em português — `UsuarioNaoEncontradoException`,
+`HorarioIndisponivelException` — estendendo a categoria certa. **O
+`ApiExceptionHandler` não precisa de método novo a cada exceção**; ele trata
+as três categorias e cobre todos os domínios futuros.
+
+Se o problema for o *formato* do dado, isso é 400 e quem resolve é o Bean
+Validation nos DTOs — não uma exceção de domínio.
+
+**Toda requisição tem um id de correlação** (`RequestIdFilter`):
+
+- Vai para o MDC, então **toda linha de log da requisição sai marcada com
+  ele** (padrão configurado em `logging.pattern.level`)
+- Volta no header `X-Request-Id` e no corpo das respostas de erro
+- Se o chamador mandar `X-Request-Id`, o valor é reaproveitado — é assim que
+  se correlaciona frontend e backend numa mesma requisição
+- Valor recebido de fora é sanitizado (evita log forging)
+
+Na prática: o usuário relata um erro, informa o id que apareceu na tela, e
+`grep <id>` no log entrega o rastro completo.
+
+Há um handler final para `Exception` que devolve 500 genérico e loga o stack
+trace. **Nunca devolva detalhe interno ao cliente** — só o id da requisição.
+
 ## Banco e migrações
 
 - **O Flyway é o dono do schema.** JPA roda com `ddl-auto: validate`, então a
@@ -209,8 +244,18 @@ memória de modelo de IA assume **3.x**. Pontos que já nos pegaram:
   API REST sem um `SecurityFilterChain` explícito bloqueia todo request que
   altera estado. Vamos precisar declarar o filter chain — isso é bom, não um
   obstáculo.
-- **Jackson 3.0**, com renomeações de classe e mudança de groupId.
+- **Jackson 3.0 mudou de pacote**: é `tools.jackson.databind.ObjectMapper`,
+  não `com.fasterxml.jackson.databind.ObjectMapper`. O groupId virou
+  `tools.jackson.core`.
+- **`@AutoConfigureMockMvc` mudou de pacote**: agora é
+  `org.springframework.boot.webmvc.test.autoconfigure`, não
+  `org.springframework.boot.test.autoconfigure.web.servlet`. (Se aparecer o
+  pacote antigo numa busca no cache do Gradle, é jar de outro projeto.)
 - Requer **Java 21**.
+
+Truque útil quando um import não resolve: procurar a classe dentro dos jars
+em vez de adivinhar o pacote —
+`find ~/.gradle/caches -name "spring-boot*.jar" | while read j; do unzip -l "$j" | grep NomeDaClasse.class; done`
 
 **Na dúvida, consulte a documentação da versão instalada em vez de confiar na
 memória.** Foi o que evitou erro na migração do frontend para o Next 16.
