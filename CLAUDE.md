@@ -37,19 +37,35 @@ roda no primeiro `bootRun`. Confirme que ela aplica antes de seguir.
 
 ## Como rodar
 
+**Um comando só sobe o backend inteiro:**
+
 ```bash
-docker compose up -d      # sobe o Postgres
-./gradlew bootRun         # sobe a API em http://localhost:8080
-./gradlew test            # testes
-./gradlew build           # compila + testa
+./gradlew bootRun
 ```
 
-**O Postgres publica na porta 5433 do host**, não na 5432 — a 5432 já está
-ocupada por outro projeto na máquina do dev. Dentro do container continua
-5432. Se `BANCO_DADOS_URL` não estiver definida, o `application.yml` aponta
-para `localhost:5433` por padrão.
+Ele sobe o Postgres do `docker-compose.yml`, espera ficar saudável, aplica as
+migrações e serve a API em `http://localhost:8080`. Quem faz isso é o
+`spring-boot-docker-compose` (dependência `developmentOnly`, então não vai
+para o jar de produção — lá o banco é externo).
 
-`docker compose down` para o banco mantendo os dados; `down -v` apaga tudo.
+```bash
+./gradlew test            # testes (usam Testcontainers, não o compose)
+./gradlew build           # compila + testa
+docker compose down       # desliga o banco (mantém os dados)
+docker compose down -v    # desliga e APAGA os dados
+```
+
+`lifecycle-management: start-only` faz o banco continuar de pé ao parar a
+aplicação — sem isso, cada Ctrl+C derrubaria o contêiner e o próximo start
+pagaria o tempo de subida de novo.
+
+**O Postgres publica na porta 5433 do host**, não na 5432 — a 5432 já está
+ocupada por outro projeto na máquina do dev. Dentro do contêiner continua
+5432. Rodando pelo compose, o Spring descobre a conexão sozinho; os valores
+em `application.yml` valem para produção, onde não há compose.
+
+O **frontend não entra neste compose** — roda à parte com `npm run dev` no
+`rafaela-vet-front`. Cada repositório sobe o que é seu.
 
 ## Arquitetura
 

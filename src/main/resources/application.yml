@@ -2,6 +2,16 @@ spring:
   application:
     name: rafaela-vet-api
 
+  docker:
+    compose:
+      # Sobe o docker-compose.yml junto com a aplicação e espera o Postgres
+      # ficar saudável antes de conectar — por isso `./gradlew bootRun` basta.
+      #
+      # `start-only`: ao parar a aplicação o banco continua de pé. O padrão
+      # derrubaria o contêiner a cada Ctrl+C, e o próximo start pagaria de
+      # novo o tempo de subida. Para desligar tudo: `docker compose down`.
+      lifecycle-management: start-only
+
   datasource:
     # Em produção tudo vem de variável de ambiente (ver CLAUDE.md seção 9).
     # Os defaults abaixo servem só para o Postgres do docker-compose local.
