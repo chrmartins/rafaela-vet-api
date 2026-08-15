@@ -215,6 +215,11 @@ trace. **Nunca devolva detalhe interno ao cliente** — só o id da requisição
 
 ## Autenticação e autorização (implementadas)
 
+> O fluxo completo entre frontend e backend — login, requisição autenticada,
+> logout, ciclo de vida da sessão — está escrito e **desenhado em diagramas**
+> em [`docs/autenticacao.md`](docs/autenticacao.md). O resumo abaixo é o
+> suficiente para codar; o documento explica o porquê de cada peça.
+
 - **Auth própria aqui no Spring**, domínio `acesso`. Não usar
   Clerk/Auth0/Keycloak. Razão: 1–3 usuários, **sem cadastro público**
   (usuários criados pelo administrador), identidade no mesmo Postgres do
