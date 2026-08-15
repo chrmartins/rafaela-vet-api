@@ -1,5 +1,6 @@
 package com.rafaelasoares.web;
 
+import com.rafaelasoares.acesso.exception.CredenciaisInvalidasException;
 import com.rafaelasoares.common.exception.BusinessRuleException;
 import com.rafaelasoares.common.exception.ConflictException;
 import com.rafaelasoares.common.exception.NotFoundException;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -31,6 +33,30 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ApiExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
+    /**
+     * Credencial inválida → 401.
+     *
+     * <p>Mensagem sempre igual para e-mail inexistente, senha errada e
+     * usuário inativo: diferenciar permitiria descobrir quem tem conta.
+     */
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<ErrorResponse> tratarCredenciaisInvalidas(
+            CredenciaisInvalidasException erro) {
+        return resposta(HttpStatus.UNAUTHORIZED, erro.getMessage());
+    }
+
+    /**
+     * Autenticado, mas sem permissão → 403.
+     *
+     * <p>É o caso de um ATENDENTE tentando gerenciar usuários.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> tratarAcessoNegado(AccessDeniedException erro) {
+        log.info("Acesso negado: {}", erro.getMessage());
+        return resposta(
+                HttpStatus.FORBIDDEN, "Você não tem permissão para executar esta operação.");
+    }
 
     /** Recurso inexistente → 404. */
     @ExceptionHandler(NotFoundException.class)

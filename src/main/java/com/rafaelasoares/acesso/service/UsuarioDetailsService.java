@@ -15,8 +15,20 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>O login é o e-mail. Nomes em inglês aqui ({@code loadUserByUsername})
  * porque é contrato de framework — quem chama é o Spring, não nosso código.
  *
- * <p>Não é temporário: quando a autenticação por JWT entrar, é este mesmo
- * serviço que vai resolver o usuário a partir do token.
+ * <p><b>Hoje não está no caminho da autenticação.</b> Quem valida a senha é o
+ * {@code CriarSessaoService}, e quem autentica cada request é o
+ * {@code TokenAutenticacaoFilter}. Este bean permanece por dois motivos:
+ *
+ * <ul>
+ *   <li>Sendo um {@code UserDetailsService}, impede o Spring Boot de criar um
+ *       usuário em memória com senha aleatória no boot — que polui o log e
+ *       parece defeito de configuração.
+ *   <li>É o ponto de extensão natural caso venhamos a usar o
+ *       {@code AuthenticationManager} do Spring (por exemplo, num fluxo de
+ *       redefinição de senha pelo administrador).
+ * </ul>
+ *
+ * <p>Se nenhum dos dois se confirmar, remova — código sem uso é dívida.
  */
 @Service
 public class UsuarioDetailsService implements UserDetailsService {

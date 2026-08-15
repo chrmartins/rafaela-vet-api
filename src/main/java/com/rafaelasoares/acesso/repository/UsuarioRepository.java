@@ -1,5 +1,6 @@
 package com.rafaelasoares.acesso.repository;
 
+import com.rafaelasoares.acesso.entity.PerfilAcesso;
 import com.rafaelasoares.acesso.entity.Usuario;
 import java.util.List;
 import java.util.Optional;
@@ -26,4 +27,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     boolean existsByEmailIgnoreCaseAndIdNot(String email, UUID id);
 
     List<Usuario> findAllByOrderByNomeCompletoAsc();
+
+    /**
+     * Quantos administradores ativos existem. Usado para não deixar o sistema
+     * sem ninguém capaz de administrá-lo.
+     */
+    long countByPerfilAcessoAndAtivoTrue(PerfilAcesso perfilAcesso);
 }

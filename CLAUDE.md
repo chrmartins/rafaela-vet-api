@@ -197,19 +197,58 @@ trace. **Nunca devolva detalhe interno ao cliente** — só o id da requisição
 - Timestamps sempre `timestamptz`; persistir em **UTC** (exibir em
   `America/Sao_Paulo` é responsabilidade do frontend).
 
-## Autenticação (decidida, ainda não implementada)
+## Autenticação e autorização (implementadas)
 
-- **Auth própria aqui no Spring** (Spring Security + JWT, domínio `acesso`).
-  Não usar Clerk/Auth0/Keycloak. Razão: 1–3 usuários, **sem cadastro
-  público** (usuários criados pelo administrador), identidade no mesmo
-  Postgres do prontuário (LGPD), sem mensalidade.
+- **Auth própria aqui no Spring**, domínio `acesso`. Não usar
+  Clerk/Auth0/Keycloak. Razão: 1–3 usuários, **sem cadastro público**
+  (usuários criados pelo administrador), identidade no mesmo Postgres do
+  prontuário (LGPD), sem mensalidade.
+- **Token opaco no banco, não JWT.** A vantagem do JWT é ser stateless — o
+  que só importa em escala. Com 1–3 usuários a consulta por request é
+  irrelevante, e em troca ganhamos **revogação imediata**: logout invalida
+  de verdade, e inativar um usuário derruba as sessões dele na hora. Com JWT
+  puro, o token continuaria valendo até expirar.
+- **O banco guarda o SHA-256 do token, nunca o token.** O valor original
+  existe só na resposta do login. SHA-256 (e não BCrypt) porque precisa ser
+  determinístico para servir de chave de busca — e um token de 256 bits
+  aleatórios não é alvo de força bruta como uma senha humana.
+- Validade padrão de 12h (`app.sessao.validade`).
 - **O frontend usa padrão BFF**: o token vai para um cookie `httpOnly` que o
-  servidor do Next guarda; o navegador nunca vê o token em JavaScript. Quem
-  chama esta API é o servidor do Next, não o browser.
-- O frontend tem um guard de rota (`proxy.ts`), mas ele só checa presença de
-  cookie. **A autorização real é responsabilidade desta API, em todo
-  request.** Nunca assuma que o frontend já validou algo.
-- Não existe auto-cadastro: não criar endpoint público de registro.
+  servidor do Next guarda; o navegador nunca o vê em JavaScript. Quem chama
+  esta API é o servidor do Next, não o browser.
+- O frontend tem guard de rota (`proxy.ts`), mas ele só checa presença de
+  cookie. **A autorização real é desta API, em todo request.** Nunca assuma
+  que o frontend validou algo.
+
+**Regras de acesso:**
+
+| Rota | Quem pode |
+|---|---|
+| `POST /api/sessoes` | público (é o único jeito de obter token) |
+| `/api/usuarios/**` | apenas `ADMINISTRADOR` |
+| `PATCH /api/usuarios/atual/senha` | qualquer autenticado, sobre a própria conta |
+| resto | qualquer autenticado |
+
+Declaradas com `@PreAuthorize` no controller, onde ficam visíveis. O
+`@PreAuthorize` de classe em `UsuarioController` faz endpoint novo **nascer
+protegido**.
+
+**Cuidados que já estão no código e não devem ser desfeitos:**
+
+- Login compara a senha mesmo quando o e-mail não existe, e devolve a mesma
+  mensagem nos dois casos — diferença de tempo ou de texto revelaria quem
+  tem conta.
+- Trocar a senha exige a senha atual e **derruba todas as sessões**: de nada
+  adiantaria a senha nova se a sessão do invasor seguisse aberta.
+- Não se pode inativar nem rebaixar o **último administrador ativo** — sem
+  isso o sistema ficaria trancado, sem ninguém para reativar alguém.
+- **`TokenAutenticacaoFilter` não pode levar `@Transactional`.** Isso faria o
+  Spring proxiá-lo com CGLIB; o proxy é criado sem chamar o construtor, o
+  `logger` herdado de `GenericFilterBean` fica nulo e a aplicação quebra no
+  boot. Por isso a consulta usa `join fetch` para trazer o usuário.
+
+**Ainda não feito:** limite de tentativas de login (força bruta) e
+redefinição de senha pelo administrador.
 
 ## Segurança e LGPD (não negociável)
 

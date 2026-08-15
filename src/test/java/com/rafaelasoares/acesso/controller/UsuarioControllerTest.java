@@ -2,6 +2,7 @@ package com.rafaelasoares.acesso.controller;
 
 import com.rafaelasoares.TestcontainersConfiguration;
 import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.repository.TokenAutenticacaoRepository;
 import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,9 +34,13 @@ class UsuarioControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private TokenAutenticacaoRepository tokenRepository;
 
     @BeforeEach
     void limparBase() {
+        // Tokens primeiro: apagar usuário com sessão referenciando-o viola a
+        // chave estrangeira. Os testes compartilham o mesmo Postgres.
+        tokenRepository.deleteAll();
         usuarioRepository.deleteAll();
     }
 
@@ -60,7 +65,7 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMINISTRADOR")
     @DisplayName("cria usuário e devolve 201, sem jamais expor o hash da senha")
     void criaSemExporHash() throws Exception {
         String corpo =
@@ -94,7 +99,7 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMINISTRADOR")
     @DisplayName("e-mail repetido em outra caixa é conflito (409)")
     void rejeitaEmailDuplicadoIgnorandoCaixa() throws Exception {
         mockMvc.perform(
@@ -127,7 +132,7 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMINISTRADOR")
     @DisplayName("campos inválidos viram 400 detalhando cada campo")
     void validaCampos() throws Exception {
         mockMvc.perform(
@@ -146,10 +151,51 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(roles = "ADMINISTRADOR")
     @DisplayName("id inexistente responde 404")
     void buscaInexistente() throws Exception {
         mockMvc.perform(get("/api/usuarios/00000000-0000-0000-0000-000000000000"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "ATENDENTE")
+    @DisplayName("perfil sem permissão não gerencia usuários (403)")
+    void atendenteNaoGerenciaUsuarios() throws Exception {
+        // Está autenticado, mas gerenciar usuário é exclusivo de
+        // ADMINISTRADOR — 403, e não 401.
+        mockMvc.perform(get("/api/usuarios")).andExpect(status().isForbidden());
+
+        mockMvc.perform(
+                        post("/api/usuarios")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                          "nomeCompleto": "Criado por atendente",
+                                          "email": "naodeve@teste.vet",
+                                          "senha": "senhaSegura123",
+                                          "perfilAcesso": "ADMINISTRADOR"
+                                        }"""))
+                .andExpect(status().isForbidden());
+
+        assertThat(usuarioRepository.count()).isZero();
+    }
+
+    @Test
+    @WithMockUser(roles = "VETERINARIO")
+    @DisplayName("qualquer perfil pode trocar a própria senha (não é 403)")
+    void trocaDeSenhaNaoExigeAdministrador() throws Exception {
+        // Só confirma que a rota não é barrada pelo perfil; o usuário do
+        // @WithMockUser não existe no banco, então a falha é de credencial.
+        mockMvc.perform(
+                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
+                                        "/api/usuarios/atual/senha")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"senhaAtual":"qualquer123",
+                                         "novaSenha":"novaSenha123"}"""))
+                .andExpect(status().isUnauthorized());
     }
 }
