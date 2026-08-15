@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: rafaela-vet-api
+
+  datasource:
+    # Em produção tudo vem de variável de ambiente (ver CLAUDE.md seção 9).
+    # Os defaults abaixo servem só para o Postgres do docker-compose local.
+    url: ${BANCO_DADOS_URL:jdbc:postgresql://localhost:5433/rafaela_vet}
+    username: ${BANCO_DADOS_USUARIO:rafaela}
+    password: ${BANCO_DADOS_SENHA:rafaela_local}
+
+  jpa:
+    hibernate:
+      # Quem manda no schema é o Flyway. `validate` faz a aplicação subir
+      # apenas se as entidades baterem com o banco migrado — erro de mapeamento
+      # aparece no boot, não em produção.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    # Tabela de histórico do Flyway fica em `public`; cada migração cria e
+    # popula o schema do seu próprio domínio (acesso, cadastro, ...).
+    default-schema: public
+    locations: classpath:db/migration
+
+server:
+  port: ${PORTA_HTTP:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    com.rafaelasoares: INFO

@@ -1,0 +1,35 @@
+# Infraestrutura local de desenvolvimento.
+#
+# As credenciais abaixo são de uso LOCAL apenas — o banco só escuta em
+# localhost e nunca sobe assim em produção, onde tudo vem de variável de
+# ambiente (BANCO_DADOS_URL, BANCO_DADOS_USUARIO, BANCO_DADOS_SENHA).
+#
+#   docker compose up -d      sobe o banco
+#   docker compose down       para (mantém os dados)
+#   docker compose down -v    para e APAGA os dados
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: rafaela-vet-postgres
+    environment:
+      POSTGRES_DB: rafaela_vet
+      POSTGRES_USER: rafaela
+      POSTGRES_PASSWORD: rafaela_local
+      # Timezone: persistimos em UTC (ver CLAUDE.md); a exibição em
+      # America/Sao_Paulo é responsabilidade da aplicação.
+      TZ: UTC
+    ports:
+      # 5433 no host porque a 5432 já é usada pelo Postgres de outro projeto
+      # nesta máquina. Dentro do container continua sendo 5432.
+      - "5433:5432"
+    volumes:
+      - rafaela-vet-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rafaela -d rafaela_vet"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  rafaela-vet-postgres:
