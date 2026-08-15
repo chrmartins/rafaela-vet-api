@@ -1,7 +1,9 @@
-package com.rafaelasoares.acesso;
+package com.rafaelasoares.acesso.service;
 
 import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.entity.Usuario;
 import com.rafaelasoares.acesso.exception.UsuarioNaoEncontradoException;
+import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

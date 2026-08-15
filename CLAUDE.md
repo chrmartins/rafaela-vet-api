@@ -74,6 +74,31 @@ Regras de fronteira:
 - Entre módulos, hoje, só chamada síncrona de service. Eventos assíncronos
   entram quando houver fato real a propagar (ver "Infraestrutura adiada").
 
+### Estrutura de um domínio
+
+Domínio no topo, **camadas dentro dele**. `acesso` é o modelo a copiar:
+
+```
+acesso/
+  controller/    UsuarioController          entrada HTTP
+  service/       CriarUsuarioService...     um por caso de uso
+  repository/    UsuarioRepository          acesso a dados
+  entity/        Usuario, PerfilAcesso      modelo de domínio
+  dto/           CriarUsuarioRequest,
+                 UsuarioResponse            contrato da API
+  exception/     UsuarioNaoEncontrado...    erros do domínio
+```
+
+Assim a fronteira que importa continua sendo `acesso.*` vs `cadastro.*` — um
+domínio novo não mexe em pasta de outro — e dentro de cada um fica óbvio onde
+cada coisa mora.
+
+**Consequência a ter em mente:** com subpacotes, o `UsuarioRepository`
+precisa ser `public`, então o compilador não impede mais `agendamento` de
+importá-lo. A regra de "não acessar dado de outro domínio" passa a valer por
+disciplina. Se isso começar a ser violado, o caminho é um teste de
+arquitetura (ArchUnit) que quebre o build — não voltar a achatar os pacotes.
+
 ## Nomenclatura
 
 **Princípio: linguagem de negócio em português, vocabulário técnico em

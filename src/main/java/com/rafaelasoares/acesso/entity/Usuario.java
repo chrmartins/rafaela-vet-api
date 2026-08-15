@@ -1,4 +1,4 @@
-package com.rafaelasoares.acesso;
+package com.rafaelasoares.acesso.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

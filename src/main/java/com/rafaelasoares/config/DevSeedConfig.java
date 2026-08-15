@@ -1,8 +1,8 @@
 package com.rafaelasoares.config;
 
-import com.rafaelasoares.acesso.PerfilAcesso;
-import com.rafaelasoares.acesso.Usuario;
-import com.rafaelasoares.acesso.UsuarioRepository;
+import com.rafaelasoares.acesso.entity.PerfilAcesso;
+import com.rafaelasoares.acesso.entity.Usuario;
+import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,6 +1,6 @@
 package com.rafaelasoares.acesso.dto;
 
-import com.rafaelasoares.acesso.PerfilAcesso;
+import com.rafaelasoares.acesso.entity.PerfilAcesso;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,7 +1,7 @@
 package com.rafaelasoares.acesso.dto;
 
-import com.rafaelasoares.acesso.PerfilAcesso;
-import com.rafaelasoares.acesso.Usuario;
+import com.rafaelasoares.acesso.entity.PerfilAcesso;
+import com.rafaelasoares.acesso.entity.Usuario;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 

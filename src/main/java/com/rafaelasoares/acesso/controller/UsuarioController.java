@@ -1,8 +1,13 @@
-package com.rafaelasoares.acesso;
+package com.rafaelasoares.acesso.controller;
 
 import com.rafaelasoares.acesso.dto.AtualizarUsuarioRequest;
 import com.rafaelasoares.acesso.dto.CriarUsuarioRequest;
 import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.service.AtualizarUsuarioService;
+import com.rafaelasoares.acesso.service.BuscarUsuarioService;
+import com.rafaelasoares.acesso.service.CriarUsuarioService;
+import com.rafaelasoares.acesso.service.InativarUsuarioService;
+import com.rafaelasoares.acesso.service.ListarUsuariosService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;

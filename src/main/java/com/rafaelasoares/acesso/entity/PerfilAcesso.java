@@ -1,4 +1,4 @@
-package com.rafaelasoares.acesso;
+package com.rafaelasoares.acesso.entity;
 
 /**
  * Perfis de acesso ao painel administrativo.

@@ -1,5 +1,6 @@
-package com.rafaelasoares.acesso;
+package com.rafaelasoares.acesso.repository;
 
+import com.rafaelasoares.acesso.entity.Usuario;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

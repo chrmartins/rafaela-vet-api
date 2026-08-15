@@ -1,8 +1,10 @@
-package com.rafaelasoares.acesso;
+package com.rafaelasoares.acesso.service;
 
 import com.rafaelasoares.acesso.dto.CriarUsuarioRequest;
 import com.rafaelasoares.acesso.dto.UsuarioResponse;
+import com.rafaelasoares.acesso.entity.Usuario;
 import com.rafaelasoares.acesso.exception.EmailJaCadastradoException;
+import com.rafaelasoares.acesso.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
