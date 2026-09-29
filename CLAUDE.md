@@ -94,18 +94,36 @@ O **frontend não entra neste compose** — roda à parte com `npm run dev` no
 
 ## Arquitetura
 
-**Monólito modular por domínio.** Um pacote Java por domínio, e cada domínio
-é dono do seu próprio schema Postgres:
+**Monólito modular por domínio.** Um pacote Java por domínio, **todos dentro de
+`com.vetplanet.modules`**, e cada domínio é dono do seu próprio schema Postgres:
 
 | Domínio | Pacote | Schema | Responsabilidade |
 |---|---|---|---|
-| Acesso | `com.vetplanet.acesso` | `acesso` | usuários do painel, autenticação |
-| Cliente | `...cliente` | `cliente` | tutores, animais, endereços |
-| Agendamento | `...agendamento` | `agendamento` | consultas, disponibilidade |
-| Prontuário | `...prontuario` | `prontuario` | atendimento clínico, vacinas, peso |
-| Faturamento | `...faturamento` | `faturamento` | (fora do MVP) |
-| Notificação | `...notificacao` | — | (ainda não iniciado) |
-| Relatório | `...relatorio` | — | (ainda não iniciado) |
+| Acesso | `com.vetplanet.modules.acesso` | `acesso` | usuários do painel, autenticação |
+| Cliente | `...modules.cliente` | `cliente` | tutores, animais, endereços |
+| Agendamento | `...modules.agendamento` | `agendamento` | consultas, disponibilidade |
+| Prontuário | `...modules.prontuario` | `prontuario` | atendimento clínico, vacinas, peso |
+| Faturamento | `...modules.faturamento` | `faturamento` | (fora do MVP) |
+| Notificação | `...modules.notificacao` | — | (ainda não iniciado) |
+| Relatório | `...modules.relatorio` | — | (ainda não iniciado) |
+
+**Por que `modules/` existe.** Antes os domínios eram irmãos de `common`, `web`
+e `config`, e nada no caminho dizia quais eram domínio e quais não. A regra de
+fronteira existia só no texto. Agora a árvore mostra a divisão:
+
+```
+com/vetplanet/
+  VetPlanetApiApplication.java
+  modules/     acesso, agendamento, cliente, prontuario   ← domínios
+  common/      vocabulário compartilhado
+  web/         borda HTTP genérica
+  config/      composition root
+```
+
+O ganho não é estético: quando houver um teste de arquitetura (ArchUnit), a
+regra "nenhum módulo importa o interior de outro" passa a ser expressável em uma
+linha, sobre um prefixo de pacote. A classe principal continua em
+`com.vetplanet`, então o scan do Spring alcança `modules.*` sem configuração.
 
 Regras de fronteira:
 
@@ -117,10 +135,11 @@ Regras de fronteira:
 
 ### Estrutura de um domínio
 
-Domínio no topo, **camadas dentro dele**. `acesso` é o modelo a copiar:
+Domínio dentro de `modules/`, **camadas dentro dele**. `acesso` é o modelo a
+copiar:
 
 ```
-acesso/
+modules/acesso/
   controller/    UsuarioController              entrada HTTP
   service/       CriarUsuarioService...         um por caso de uso
   repository/    UsuarioRepository              acesso a dados
@@ -136,8 +155,8 @@ As duas últimas são **opcionais** — existem quando o domínio precisa delas,
 `acesso` é o único caso hoje. A regra para criar uma: o que está lá dentro só
 faz sentido para este domínio.
 
-Assim a fronteira que importa continua sendo `acesso.*` vs `cliente.*` — um
-domínio novo não mexe em pasta de outro — e dentro de cada um fica óbvio onde
+Assim a fronteira que importa continua sendo `modules.acesso.*` vs
+`modules.cliente.*` — um domínio novo não mexe em pasta de outro — e dentro de cada um fica óbvio onde
 cada coisa mora.
 
 **Consequência a ter em mente:** com subpacotes, o `UsuarioRepository`

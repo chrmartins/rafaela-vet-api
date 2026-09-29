@@ -1,7 +1,7 @@
 package com.vetplanet.config;
 
-import com.vetplanet.acesso.config.DevSeedConfig;
-import com.vetplanet.acesso.filter.TokenAutenticacaoFilter;
+import com.vetplanet.modules.acesso.config.DevSeedConfig;
+import com.vetplanet.modules.acesso.filter.TokenAutenticacaoFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -7,7 +7,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 // Público para poder ser importado pelos testes dos domínios
-// (com.vetplanet.acesso, etc.), que ficam em outros pacotes.
+// (com.vetplanet.modules.acesso, etc.), que ficam em outros pacotes.
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
